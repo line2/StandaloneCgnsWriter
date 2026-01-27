@@ -1,0 +1,20 @@
+[
+{
+  "directory": "C:/Users/line2/project/StandaloneCgnsWriter/build/Visual Studio Community 2022 Release - amd64/Release",
+  "command": "C:\\PROGRA~1\\MICROS~1\\2022\\COMMUN~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -DH5_BUILT_AS_DYNAMIC_LIB -DKISSFFT_DLL_IMPORT=1 -DUSE_DLL -Dkiss_fft_scalar=double -IC:\\Users\\line2\\project\\StandaloneCgnsWriter\\src -external:ID:\\vcpkg\\installed\\x64-windows\\include -external:ID:\\vcpkg\\installed\\x64-windows\\include\\vtk-9.3 -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD /FoCMakeFiles\\cgns_writer.dir\\src\\CgnsWriter.cpp.obj /FdCMakeFiles\\cgns_writer.dir\\cgns_writer.pdb /FS -c C:\\Users\\line2\\project\\StandaloneCgnsWriter\\src\\CgnsWriter.cpp",
+  "file": "C:/Users/line2/project/StandaloneCgnsWriter/src/CgnsWriter.cpp",
+  "output": "C:/Users/line2/project/StandaloneCgnsWriter/build/Visual Studio Community 2022 Release - amd64/Release/CMakeFiles/cgns_writer.dir/src/CgnsWriter.cpp.obj"
+},
+{
+  "directory": "C:/Users/line2/project/StandaloneCgnsWriter/build/Visual Studio Community 2022 Release - amd64/Release",
+  "command": "C:\\PROGRA~1\\MICROS~1\\2022\\COMMUN~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -DCGNS_WRITER_EXPORTS -DH5_BUILT_AS_DYNAMIC_LIB -DUSE_DLL -Dcgns_writer_dll_EXPORTS -IC:\\Users\\line2\\project\\StandaloneCgnsWriter\\src -external:ID:\\vcpkg\\installed\\x64-windows\\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD /FoCMakeFiles\\cgns_writer_dll.dir\\src\\CgnsWriterCore.cpp.obj /FdCMakeFiles\\cgns_writer_dll.dir\\ /FS -c C:\\Users\\line2\\project\\StandaloneCgnsWriter\\src\\CgnsWriterCore.cpp",
+  "file": "C:/Users/line2/project/StandaloneCgnsWriter/src/CgnsWriterCore.cpp",
+  "output": "C:/Users/line2/project/StandaloneCgnsWriter/build/Visual Studio Community 2022 Release - amd64/Release/CMakeFiles/cgns_writer_dll.dir/src/CgnsWriterCore.cpp.obj"
+},
+{
+  "directory": "C:/Users/line2/project/StandaloneCgnsWriter/build/Visual Studio Community 2022 Release - amd64/Release",
+  "command": "C:\\PROGRA~1\\MICROS~1\\2022\\COMMUN~1\\VC\\Tools\\MSVC\\1444~1.352\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -DKISSFFT_DLL_IMPORT=1 -Dkiss_fft_scalar=double -IC:\\Users\\line2\\project\\StandaloneCgnsWriter\\src -external:ID:\\vcpkg\\installed\\x64-windows\\include\\vtk-9.3 -external:ID:\\vcpkg\\installed\\x64-windows\\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD /FoCMakeFiles\\vtk_to_cgns.dir\\src\\main.cpp.obj /FdCMakeFiles\\vtk_to_cgns.dir\\ /FS -c C:\\Users\\line2\\project\\StandaloneCgnsWriter\\src\\main.cpp",
+  "file": "C:/Users/line2/project/StandaloneCgnsWriter/src/main.cpp",
+  "output": "C:/Users/line2/project/StandaloneCgnsWriter/build/Visual Studio Community 2022 Release - amd64/Release/CMakeFiles/vtk_to_cgns.dir/src/main.cpp.obj"
+}
+]
