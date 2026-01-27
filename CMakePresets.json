@@ -1,0 +1,83 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default (Ninja + vcpkg)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "debug-dll",
+      "displayName": "Debug (Ninja + vcpkg, DLL ON)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_CGNS_DLL": "ON",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "release-dll",
+      "displayName": "Release (Ninja + vcpkg, DLL ON)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-release-dll",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_CGNS_DLL": "ON",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "vs-2022",
+      "displayName": "Visual Studio 2022 (vcpkg)",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build-vs",
+      "architecture": "x64",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-dll",
+      "configurePreset": "debug-dll",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-dll",
+      "configurePreset": "release-dll",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs-debug",
+      "configurePreset": "vs-2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs-release",
+      "configurePreset": "vs-2022",
+      "configuration": "Release"
+    }
+  ]
+}
