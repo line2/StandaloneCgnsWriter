@@ -1,0 +1,29 @@
+{
+  "name": "standalone-cgns-writer",
+  "version": "0.1.0",
+  "port-version": 0,
+  "description": "A minimal C++ library that exports VTK datasets (structured or unstructured) into CGNS files",
+  "homepage": "https://github.com/your-org/StandaloneCgnsWriter",
+  "license": "MIT",
+  "dependencies": [
+    "cgns",
+    "vtk",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "dll": {
+      "description": "Build the standalone CGNS writer DLL (cgns_writer_dll)",
+      "dependencies": []
+    }
+  },
+  "default-features": [
+    "dll"
+  ]
+}

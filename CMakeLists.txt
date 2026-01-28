@@ -8,6 +8,27 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Set runtime library to match vcpkg's x64-windows-static triplet
+# This ensures all targets use static runtime library (MT/MTd) to match vcpkg's static triplet
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32)
+  # For Clang with MSVC ABI, set flags to use static runtime library
+  # Remove -D_DLL and ensure -D_MT is set (static runtime)
+  string(REPLACE "-D_DLL" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  string(REPLACE "-D_MT" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  add_compile_options(
+    $<$<CONFIG:Release>:-D_MT>
+    $<$<CONFIG:RelWithDebInfo>:-D_MT>
+    $<$<CONFIG:MinSizeRel>:-D_MT>
+    $<$<CONFIG:Debug>:-D_MTd>
+  )
+  # Also set the MSVC runtime library property for CMake 3.15+
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+include(GNUInstallDirs)
+
 # ---- Dependencies ----
 # VTK (no ParaView required)
 find_package(VTK REQUIRED COMPONENTS
@@ -43,6 +64,13 @@ target_link_libraries(cgns_writer PUBLIC
   VTK::CommonDataModel
 )
 
+# Ensure static runtime library for cgns_writer
+if(MSVC OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32))
+  set_target_properties(cgns_writer PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+  )
+endif()
+
 # ---- Standalone DLL (no VTK) ----
 option(BUILD_CGNS_DLL "Build the standalone CGNS writer DLL" ON)
 
@@ -69,13 +97,14 @@ if(BUILD_CGNS_DLL)
     IMPORT_LIBRARY_OUTPUT_NAME "cgns_writer_dll"
     WINDOWS_EXPORT_ALL_SYMBOLS OFF
   )
+  
+  # Ensure static runtime library for cgns_writer_dll
+  if(MSVC OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32))
+    set_target_properties(cgns_writer_dll PROPERTIES
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+  endif()
 
-  install(TARGETS cgns_writer_dll
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-  )
-  install(FILES src/CgnsWriterExport.h DESTINATION include)
 endif()
 
 # ---- CLI tool ----
@@ -90,8 +119,101 @@ target_link_libraries(vtk_to_cgns PRIVATE
   VTK::IOXML
 )
 
+# Ensure static runtime library for vtk_to_cgns
+if(MSVC OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32))
+  set_target_properties(vtk_to_cgns PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+  )
+endif()
+
 # For static VTK builds: ensure modules are initialized.
 vtk_module_autoinit(
   TARGETS vtk_to_cgns
   MODULES ${VTK_LIBRARIES}
 )
+
+# ---- Installation & packaging ----
+install(TARGETS cgns_writer
+  EXPORT StandaloneCgnsWriterTargets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+if(BUILD_CGNS_DLL)
+  install(TARGETS cgns_writer_dll
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+endif()
+
+install(TARGETS vtk_to_cgns
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(DIRECTORY src/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h"
+)
+
+install(EXPORT StandaloneCgnsWriterTargets
+  NAMESPACE StandaloneCgnsWriter::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+export(EXPORT StandaloneCgnsWriterTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/StandaloneCgnsWriterTargets.cmake"
+  NAMESPACE StandaloneCgnsWriter::
+)
+
+# if(WIN32)
+#   set(_standalone_bundle_dirs "")
+
+#   function(_collect_dependency_dir target)
+#     if(NOT TARGET ${target})
+#       return()
+#     endif()
+
+#     foreach(_prop IMPORTED_LOCATION IMPORTED_LOCATION_RELEASE IMPORTED_LOCATION_DEBUG
+#                   IMPORTED_LOCATION_RELWITHDEBINFO IMPORTED_LOCATION_MINSIZEREL)
+#       get_target_property(_location ${target} ${_prop})
+#       if(_location)
+#         get_filename_component(_dir ${_location} DIRECTORY)
+#         list(APPEND _standalone_bundle_dirs ${_dir})
+#       endif()
+#     endforeach()
+#   endfunction()
+
+#   _collect_dependency_dir(VTK::CommonCore)
+#   _collect_dependency_dir(VTK::CommonDataModel)
+#   _collect_dependency_dir(VTK::CommonExecutionModel)
+#   _collect_dependency_dir(VTK::IOLegacy)
+#   _collect_dependency_dir(VTK::IOXML)
+#   _collect_dependency_dir(CGNS::cgns_shared)
+#   _collect_dependency_dir(CGNS::cgns_static)
+
+#   list(REMOVE_DUPLICATES _standalone_bundle_dirs)
+
+#   if(_standalone_bundle_dirs)
+#     set(_bundle_dirs_script "")
+#     foreach(_bundle_dir IN LISTS _standalone_bundle_dirs)
+#       file(TO_CMAKE_PATH "${_bundle_dir}" _cmake_bundle_dir)
+#       set(_bundle_dirs_script "${_bundle_dirs_script} \"${_cmake_bundle_dir}\"")
+#     endforeach()
+
+#     file(TO_CMAKE_PATH "${CMAKE_INSTALL_FULL_BINDIR}" _install_bindir)
+
+#     install(CODE "include(BundleUtilities)
+# fixup_bundle(\"${_install_bindir}/vtk_to_cgns${CMAKE_EXECUTABLE_SUFFIX}\" \"${_install_bindir}\"${_bundle_dirs_script})")
+#   endif()
+# endif()
+
+# set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+# set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+# set(CPACK_GENERATOR "ZIP;NSIS")
+# set(CPACK_NSIS_DISPLAY_NAME "${PROJECT_NAME}")
+# file(TO_CMAKE_PATH "${CMAKE_INSTALL_BINDIR}/vtk_to_cgns${CMAKE_EXECUTABLE_SUFFIX}" _nsis_icon_path)
+# set(CPACK_NSIS_INSTALLED_ICON_NAME "${_nsis_icon_path}")
+
+# include(CPack)
