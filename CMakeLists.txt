@@ -7,6 +7,7 @@ project(StandaloneCgnsWriter
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(GNUInstallDirs)
 
 # ---- Dependencies ----
 # VTK (no ParaView required)
@@ -70,12 +71,6 @@ if(BUILD_CGNS_DLL)
     WINDOWS_EXPORT_ALL_SYMBOLS OFF
   )
 
-  install(TARGETS cgns_writer_dll
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-  )
-  install(FILES src/CgnsWriterExport.h DESTINATION include)
 endif()
 
 # ---- CLI tool ----
@@ -95,3 +90,89 @@ vtk_module_autoinit(
   TARGETS vtk_to_cgns
   MODULES ${VTK_LIBRARIES}
 )
+
+# ---- Installation & packaging ----
+install(TARGETS cgns_writer
+  EXPORT StandaloneCgnsWriterTargets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+if(BUILD_CGNS_DLL)
+  install(TARGETS cgns_writer_dll
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+endif()
+
+install(TARGETS vtk_to_cgns
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(DIRECTORY src/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING PATTERN "*.h"
+)
+
+install(EXPORT StandaloneCgnsWriterTargets
+  NAMESPACE StandaloneCgnsWriter::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+export(EXPORT StandaloneCgnsWriterTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/StandaloneCgnsWriterTargets.cmake"
+  NAMESPACE StandaloneCgnsWriter::
+)
+
+if(WIN32)
+  set(_standalone_bundle_dirs "")
+
+  function(_collect_dependency_dir target)
+    if(NOT TARGET ${target})
+      return()
+    endif()
+
+    foreach(_prop IMPORTED_LOCATION IMPORTED_LOCATION_RELEASE IMPORTED_LOCATION_DEBUG
+                  IMPORTED_LOCATION_RELWITHDEBINFO IMPORTED_LOCATION_MINSIZEREL)
+      get_target_property(_location ${target} ${_prop})
+      if(_location)
+        get_filename_component(_dir ${_location} DIRECTORY)
+        list(APPEND _standalone_bundle_dirs ${_dir})
+      endif()
+    endforeach()
+  endfunction()
+
+  _collect_dependency_dir(VTK::CommonCore)
+  _collect_dependency_dir(VTK::CommonDataModel)
+  _collect_dependency_dir(VTK::CommonExecutionModel)
+  _collect_dependency_dir(VTK::IOLegacy)
+  _collect_dependency_dir(VTK::IOXML)
+  _collect_dependency_dir(CGNS::cgns_shared)
+  _collect_dependency_dir(CGNS::cgns_static)
+
+  list(REMOVE_DUPLICATES _standalone_bundle_dirs)
+
+  if(_standalone_bundle_dirs)
+    set(_bundle_dirs_script "")
+    foreach(_bundle_dir IN LISTS _standalone_bundle_dirs)
+      file(TO_CMAKE_PATH "${_bundle_dir}" _cmake_bundle_dir)
+      set(_bundle_dirs_script "${_bundle_dirs_script} \"${_cmake_bundle_dir}\"")
+    endforeach()
+
+    file(TO_CMAKE_PATH "${CMAKE_INSTALL_FULL_BINDIR}" _install_bindir)
+
+    install(CODE "include(BundleUtilities)
+fixup_bundle(\"${_install_bindir}/vtk_to_cgns${CMAKE_EXECUTABLE_SUFFIX}\" \"${_install_bindir}\"${_bundle_dirs_script})")
+  endif()
+endif()
+
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_GENERATOR "ZIP;NSIS")
+set(CPACK_NSIS_DISPLAY_NAME "${PROJECT_NAME}")
+file(TO_CMAKE_PATH "${CMAKE_INSTALL_BINDIR}/vtk_to_cgns${CMAKE_EXECUTABLE_SUFFIX}" _nsis_icon_path)
+set(CPACK_NSIS_INSTALLED_ICON_NAME "${_nsis_icon_path}")
+
+include(CPack)
