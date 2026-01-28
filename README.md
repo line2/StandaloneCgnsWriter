@@ -19,8 +19,6 @@ runtime.
   - `cgns_writer_dll`: optional shared library (`BUILD_CGNS_DLL` ON by default) that builds
     the standalone CGNS-only API, exports symbols with `CgnsWriterExport.h`, and installs
     binaries/headers under `bin/lib/include`.
-  - `vtk_to_cgns`: CLI tool that links `cgns_writer` plus execution/IO VTK modules and
-    invokes `vtk_module_autoinit` so static VTK builds register their modules.
 
 ## CMake presets
 
@@ -49,10 +47,3 @@ cmake --build --preset vs-release     # compiles the release configuration
 Ensure `VCPKG_ROOT` is defined so each preset can find `vcpkg.cmake`; the presets expect
 `install/<presetName>` to hold the generated `installed` tree.
 
-## Running the tool
-
-```bash
-./build/vtk_to_cgns input.vtu output.cgns
-./build/vtk_to_cgns input.vtm output.cgns --hdf5
-./build/vtk_to_cgns input.vtk output.cgns --adf --keep-ghost
-```

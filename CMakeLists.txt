@@ -34,7 +34,6 @@ include(GNUInstallDirs)
 find_package(VTK REQUIRED COMPONENTS
   CommonCore
   CommonDataModel
-  CommonExecutionModel
   IOLegacy
   IOXML
 )
@@ -107,30 +106,32 @@ if(BUILD_CGNS_DLL)
 
 endif()
 
-# ---- CLI tool ----
-add_executable(vtk_to_cgns
-  src/main.cpp
-)
-
-target_link_libraries(vtk_to_cgns PRIVATE
-  cgns_writer
-  VTK::CommonExecutionModel
-  VTK::IOLegacy
-  VTK::IOXML
-)
-
-# Ensure static runtime library for vtk_to_cgns
-if(MSVC OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32))
-  set_target_properties(vtk_to_cgns PROPERTIES
-    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+# ---- Core Example (no VTK) ----
+if(BUILD_CGNS_DLL)
+  add_executable(core_example
+    example/core_example.cpp
   )
-endif()
 
-# For static VTK builds: ensure modules are initialized.
-vtk_module_autoinit(
-  TARGETS vtk_to_cgns
-  MODULES ${VTK_LIBRARIES}
-)
+  target_include_directories(core_example PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>"
+  )
+
+  target_link_libraries(core_example PRIVATE
+    cgns_writer_dll
+    $<IF:$<TARGET_EXISTS:CGNS::cgns_shared>,CGNS::cgns_shared,CGNS::cgns_static>
+    VTK::CommonCore
+    VTK::CommonDataModel
+    VTK::IOLegacy
+    VTK::IOXML
+  )
+
+  # Ensure static runtime library for core_example
+  if(MSVC OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND WIN32))
+    set_target_properties(core_example PROPERTIES
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+  endif()
+endif()
 
 # ---- Installation & packaging ----
 install(TARGETS cgns_writer
@@ -148,9 +149,11 @@ if(BUILD_CGNS_DLL)
   )
 endif()
 
-install(TARGETS vtk_to_cgns
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if(BUILD_CGNS_DLL)
+  install(TARGETS core_example
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
+endif()
 
 install(DIRECTORY src/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

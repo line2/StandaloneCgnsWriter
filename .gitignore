@@ -2,3 +2,5 @@
 /.cache
 /.vscode
 /.cursor
+/CMakeUserPresets.json
+/compile_commands.json
