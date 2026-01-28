@@ -1,3 +1,4 @@
-/out*
+/out
 /.cache
 /.vscode
+/.cursor
